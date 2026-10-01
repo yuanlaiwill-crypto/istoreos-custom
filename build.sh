@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-JOBS="${JOBS:-$(nproc)}"
+JOBS="$(nproc)"
 WORKDIR="${GITHUB_WORKSPACE}"
 SRC="${WORKDIR}/istoreos"
 BRANCH="istoreos-24.10"
@@ -86,7 +86,8 @@ echo "[7/8] Download source packages"
 make download -j"${JOBS}"
 
 echo "[8/8] Compile"
-make -j"${JOBS}" V=s
+# 先多线程全速编译，若失败自动单线程重试输出清晰报错
+make -j"${JOBS}" || make -j1 V=s
 
 echo "=========================================="
 echo " BUILD FINISHED"
