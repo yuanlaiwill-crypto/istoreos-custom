@@ -65,6 +65,10 @@ sed -i '1i src-git passwall_luci https://github.com/Openwrt-Passwall/openwrt-pas
 
 echo "[4/8] Update feeds"
 ./scripts/feeds update -a
+
+# 彻底删除要求 Go 1.24+ 的 geoview 源码包
+rm -rf feeds/passwall_packages/geoview package/feeds/passwall_packages/geoview
+
 ./scripts/feeds install -a
 
 echo "[5/8] Add OpenClash"
@@ -80,13 +84,15 @@ cp -a \
 
 echo "[6/8] Load configuration"
 cp "${WORKDIR}/configs/x86-64.config" .config
+# 确保配置中关闭 geoview
+sed -i '/CONFIG_PACKAGE_geoview=y/d' .config
+echo "# CONFIG_PACKAGE_geoview is not set" >> .config
 make defconfig
 
 echo "[7/8] Download source packages"
 make download -j"${JOBS}"
 
 echo "[8/8] Compile"
-# 先多线程全速编译，若失败自动单线程重试输出清晰报错
 make -j"${JOBS}" || make -j1 V=s
 
 echo "=========================================="
